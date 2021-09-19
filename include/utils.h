@@ -16,6 +16,12 @@
   ClassName &operator=(const ClassName &) = delete;
 #endif
 
+#ifndef DEFAULT_COPY
+#define DEFAULT_COPY(ClassName)           \
+  ClassName(const ClassName &) = default; \
+  ClassName &operator=(const ClassName &) = default;
+#endif
+
 #ifndef DELETE_MOVE
 #define DELETE_MOVE(ClassName)      \
   ClassName(ClassName &&) = delete; \

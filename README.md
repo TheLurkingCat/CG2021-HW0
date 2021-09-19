@@ -1,5 +1,6 @@
 # NYCU CG2021 Homework 0
 
+[![release](https://github.com/TheLurkingCat/CG2021-HW0/actions/workflows/build.yml/badge.svg?branch=release&event=push)](https://github.com/TheLurkingCat/CG2021-HW0/actions/workflows/build.yml)
 ## Dependencies
 
 - [glfw](https://github.com/glfw/glfw)

@@ -8,44 +8,44 @@ class OpenGLContext final {
  public:
   // Not copyable
   DELETE_COPY(OpenGLContext)
-  // Not movables
+  // Not movable
   DELETE_MOVE(OpenGLContext)
   /// @brief Release resources
   ~OpenGLContext();
   /**
    * @brief Create OpenGL context.
    *
-   * @param window_title title of the created window.
-   * @param width window width.
-   * @param height window height.
+   * @param GLversion Minimal version of OpenGL context, (pass 41 if you want OpenGL 4.1 context)
+   * @param profile OpenGL profile, can be one of GLFW_OPENGL_CORE_PROFILE, GLFW_OPENGL_ANY_PROFILE or
+   * GLFW_OPENGL_COMPAT_PROFILE. Note that for GLversion < 32, you should always use GLFW_OPENGL_ANY_PROFILE
    *
-   * @return reference of context.
    */
-  static OpenGLContext& createContext(int GLversion, int profile, int width = 1280, int height = 720);
+  static void createContext(int GLversion, int profile);
   /// @return Current window handle.
   static GLFWwindow* getWindow() { return window; }
   /// @return Refresh rate of the primary monitor.
   static int getRefreshRate() { return refresh_rate; }
+  /// @return Current framebuffer width
+  static int getWidth() { return framebuffer_width; }
+  /// @return Current framebuffer height
+  static int getHeight() { return framebuffer_height; }
+  /// @return Current framebuffer aspect ratio
+  static float getAspectRatio() { return static_cast<float>(framebuffer_width) / framebuffer_height; }
   /// @brief Enable OpenGL's debug callback
   static void printSystemInfo();
-  /// @brief Useful to report OpenGL errors.
-  static void enableDebugLogging();
+  /// @brief Framebuffer resize callback function
+  static void framebufferResizeCallback(GLFWwindow* _window, int width, int height);
+  /// @brief Enable OpenGL's debug callback, useful for debugging.
+  static void enableDebugCallback();
 
  private:
-  /**
-   * @brief Create OpenGL context, call by createContext method
-   *
-   * @param window_title title of the created window.
-   * @param width window width.
-   * @param height window height.
-   *
-   * @return reference of context.
-   */
-  OpenGLContext(int width, int height);
-  // You can change OpenGL version here
-  static int OpenGL_version;
-  static int OpenGL_profile;
+  /// @brief Create OpenGL context, call by createContext method
+  OpenGLContext();
+  static int major_version, minor_version;
+  static int profile;
   // Cached data
   static GLFWwindow* window;
   static int refresh_rate;
+  // Current framebuffer size, in PIXEL (not screen coordinate)
+  static int framebuffer_width, framebuffer_height;
 };

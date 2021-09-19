@@ -6,71 +6,129 @@
 
 GLFWwindow* OpenGLContext::window = nullptr;
 int OpenGLContext::refresh_rate = 60;
-int OpenGLContext::OpenGL_version = 41;
-int OpenGLContext::OpenGL_profile = GLFW_OPENGL_COMPAT_PROFILE;
+int OpenGLContext::major_version = 4;
+int OpenGLContext::minor_version = 1;
+int OpenGLContext::profile = GLFW_OPENGL_COMPAT_PROFILE;
+int OpenGLContext::framebuffer_width = 1280;
+int OpenGLContext::framebuffer_height = 720;
 
 namespace {
-const char* getErrorTypeString(GLenum error) {
-  switch (error) {
+void printSourceEnum(GLenum source) {
+  std::cerr << "Source  : ";
+  switch (source) {
+    case GL_DEBUG_SOURCE_API:
+      std::cerr << "API";
+      break;
+    case GL_DEBUG_SOURCE_WINDOW_SYSTEM:
+      std::cerr << "Window system";
+      break;
+    case GL_DEBUG_SOURCE_SHADER_COMPILER:
+      std::cerr << "Shader compiler";
+      break;
+    case GL_DEBUG_SOURCE_THIRD_PARTY:
+      std::cerr << "Third party";
+      break;
+    case GL_DEBUG_SOURCE_APPLICATION:
+      std::cerr << "Application";
+      break;
+    case GL_DEBUG_SOURCE_OTHER:
+      [[fallthrough]];
+    default:
+      std::cerr << "Other";
+      break;
+  }
+  std::cerr << std::endl;
+}
+
+void printTypeEnum(GLenum type) {
+  std::cerr << "Type    : ";
+  switch (type) {
     case GL_DEBUG_TYPE_ERROR:
-      return "Error";
+      std::cerr << "Error";
+      break;
     case GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR:
-      return "Deprecated behavior";
+      std::cerr << "Deprecated behavior";
+      break;
     case GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR:
-      return "Undefined behavior";
+      std::cerr << "Undefined behavior";
+      break;
     case GL_DEBUG_TYPE_PORTABILITY:
-      return "Portability";
+      std::cerr << "Portability";
+      break;
     case GL_DEBUG_TYPE_PERFORMANCE:
-      return "Performance";
+      std::cerr << "Performance";
+      break;
+    case GL_DEBUG_TYPE_MARKER:
+      std::cerr << "Marker";
+      break;
+    case GL_DEBUG_TYPE_PUSH_GROUP:
+      std::cerr << "Push group";
+      break;
+    case GL_DEBUG_TYPE_POP_GROUP:
+      std::cerr << "Pop group";
+      break;
     case GL_DEBUG_TYPE_OTHER:
       [[fallthrough]];
     default:
-      return "Other";
+      std::cerr << "Other";
+      break;
   }
+  std::cerr << std::endl;
 }
 
-const char* getSeverityString(GLenum severity) {
+void printSeverityEnum(GLenum severity) {
+  std::cerr << "Severity: ";
   switch (severity) {
     case GL_DEBUG_SEVERITY_HIGH:
-      return "High";
+      std::cerr << "High";
+      break;
     case GL_DEBUG_SEVERITY_MEDIUM:
-      return "Medium";
+      std::cerr << "Medium";
+      break;
     case GL_DEBUG_SEVERITY_LOW:
-      return "Low";
+      std::cerr << "Low";
+      break;
+    case GL_DEBUG_SEVERITY_NOTIFICATION:
+      [[fallthrough]];
     default:
-      return "Info";
+      std::cerr << "Notification";
+      break;
   }
+  std::cerr << std::endl;
 }
-void GLAPIENTRY errorCallback(GLenum, GLenum type, GLuint, GLenum severity, GLsizei, const GLchar* message,
+
+void GLAPIENTRY errorCallback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei, const GLchar* message,
                               const void*) {
-  const char* severityString = getSeverityString(severity);
-  const char* errorTypeString = getErrorTypeString(type);
-// Ignore Info level information when in release mode
-#ifdef NDEBUG
-  if (severityString[0] != 'I') {
-#endif
-    std::cerr << "[OpenGL][" << errorTypeString << "][" << severityString << "] " << message << std::endl;
-#ifdef NDEBUG
-  }
-#endif
+  if (id == 131169 ||  // Allocate framebuffer
+      id == 131185 ||  // Allocate buffer
+      id == 131218 ||  // Shader recompile
+      id == 131204     // Texture no base level
+  )
+    return;
+  std::cerr << std::endl << "Message : " << message << std::endl;
+  printSeverityEnum(severity);
+  printSourceEnum(source);
+  printTypeEnum(type);
 }
 }  // namespace
 
-OpenGLContext::OpenGLContext(int width, int height) {
+OpenGLContext::OpenGLContext() {
   // Initialize GLFW
   if (glfwInit() == GLFW_FALSE) {
     THROW_EXCEPTION(std::runtime_error, "Failed to initialize GLFW!");
   }
   // Setup context property
-  glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, OpenGL_version / 10);
-  glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, OpenGL_version % 10);
-  if (OpenGLContext::OpenGL_profile == GLFW_OPENGL_CORE_PROFILE) {
-    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
+  glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, major_version);
+  glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, minor_version);
+  if (OpenGLContext::profile == GLFW_OPENGL_CORE_PROFILE) {
+    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GLFW_TRUE);
   }
-  glfwWindowHint(GLFW_OPENGL_PROFILE, OpenGLContext::OpenGL_profile);
-  glfwWindowHint(GLFW_SAMPLES, 4);
+  glfwWindowHint(GLFW_OPENGL_PROFILE, OpenGLContext::profile);
+#ifndef NDEBUG
+  glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GLFW_TRUE);
+#endif
   // Create OpenGL context
-  window = glfwCreateWindow(width, height, "Hello", nullptr, nullptr);
+  window = glfwCreateWindow(1280, 720, "Hello World!", nullptr, nullptr);
   if (window == nullptr) {
     THROW_EXCEPTION(std::runtime_error, "Failed to create OpenGL context!");
   }
@@ -87,15 +145,13 @@ OpenGLContext::OpenGLContext(int width, int height) {
 #endif
   // For high dpi monitors like Retina display, we need to recalculate
   // framebuffer size
-  glfwGetFramebufferSize(window, &width, &height);
-  glViewport(0, 0, width, height);
+  glfwGetFramebufferSize(window, &framebuffer_width, &framebuffer_height);
+  glViewport(0, 0, framebuffer_width, framebuffer_height);
   // OK, everything works fine
   // ----------------------------------------------------------
   // Enable some OpenGL feature
   glEnable(GL_DEPTH_TEST);
   glEnable(GL_CULL_FACE);
-  glCullFace(GL_BACK);
-  glFrontFace(GL_CCW);
   glClearColor(0, 0, 0, 1);
 }
 
@@ -104,19 +160,26 @@ OpenGLContext::~OpenGLContext() {
   glfwTerminate();
 }
 
-OpenGLContext& OpenGLContext::createContext(int GLversion, int profile, int width, int height) {
+void OpenGLContext::createContext(int GLversion, int profile) {
   // We should only initialize once
   if (window == nullptr) {
-    OpenGLContext::OpenGL_version = GLversion;
-    OpenGLContext::OpenGL_profile = profile;
+    OpenGLContext::major_version = GLversion / 10;
+    OpenGLContext::minor_version = GLversion % 10;
+    if (GLversion < 32)
+      OpenGLContext::profile = GLFW_OPENGL_ANY_PROFILE;
+    else
+      OpenGLContext::profile = profile;
   }
-  static OpenGLContext context(width, height);
-  return context;
+  static OpenGLContext context;
 }
 
 void OpenGLContext::printSystemInfo() {
   GLFWmonitor* moniter = glfwGetPrimaryMonitor();
   const GLFWvidmode* vidMode = glfwGetVideoMode(moniter);
+  if (vidMode == nullptr) {
+    std::cerr << "Unable to get video mode of monitor." << std::endl;
+    return;
+  }
   OpenGLContext::refresh_rate = vidMode->refreshRate;
 
   std::cout << std::left << std::setw(26) << "Current OpenGL renderer"
@@ -127,12 +190,23 @@ void OpenGLContext::printSystemInfo() {
             << ": " << refresh_rate << " Hz" << std::endl;
 }
 
-void OpenGLContext::enableDebugLogging() {
-  // Very useful when you are debugging, required OpenGL 4.3
-  if (OpenGL_version < 43) {
-    std::cout << "You need to change context to a version >= 43" << std::endl;
-  } else {
+void OpenGLContext::framebufferResizeCallback(GLFWwindow*, int width, int height) {
+  framebuffer_width = width;
+  framebuffer_height = height;
+  glViewport(0, 0, width, height);
+}
+
+void OpenGLContext::enableDebugCallback() {
+  int flags = 0;
+  glGetIntegerv(GL_CONTEXT_FLAGS, &flags);
+  if (flags & GL_CONTEXT_FLAG_DEBUG_BIT) {
+    std::cout << "Debug context enabled, this may hurt performance." << std::endl;
+    std::cout << "Build in release mode to disable debugging." << std::endl;
     glEnable(GL_DEBUG_OUTPUT);
+    glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
     glDebugMessageCallback(errorCallback, nullptr);
+    glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, nullptr, GL_TRUE);
+  } else {
+    std::cout << "You should build with debug mode to enable this feature." << std::endl;
   }
 }

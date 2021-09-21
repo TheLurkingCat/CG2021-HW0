@@ -11,6 +11,7 @@ extern/glfw/CMakeLists.txt \
 cmake \
 include \
 src \
+vs2019 \
 .clang-format \
 CMakeLists.txt \
 README.md

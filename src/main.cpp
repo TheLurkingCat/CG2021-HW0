@@ -87,7 +87,7 @@ void drawCircle(int edges, const std::array<float, MAX_EDGES * 3>& colors) {
     float angle = static_cast<float>(2 * M_PI * i) / edges;
     float x = 0.75f * std::cos(angle);
     float y = 0.75f * std::sin(angle);
-    glColor3fv(colors.data() + 3 * i);
+    glColor3fv(colors.data() + 3LL * i);
     glVertex2f(x, y);
   }
   glEnd();

@@ -10,7 +10,11 @@ extern/glfw/CMakeLists.txt `
 cmake `
 include `
 src `
-vs2019 `
+vs2019/glfw `
+vs2019/HW0.sln `
+vs2019/HW0.vcxproj `
+vs2019/HW0.vcxproj.filters `
+vs2019/HW0.vcxproj.user `
 .clang-format `
 CMakeLists.txt `
 README.md

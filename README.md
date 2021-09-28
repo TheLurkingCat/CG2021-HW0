@@ -50,6 +50,6 @@ cd bin
 
 ### Visual Studio 2019
 
-- Open `vs201/HW0.sln`
+- Open `vs2019/HW0.sln`
 - Select config then build (CTRL+SHIFT+B)
 - Use F5 to debug or CTRL+F5 to run.

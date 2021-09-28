@@ -5,9 +5,16 @@
 #include <string>
 
 #include <GLFW/glfw3.h>
+
+#ifdef _MSC_VER
+#pragma warning(push, 0)
+#endif
 #define GLAD_GL_IMPLEMENTATION
 #include <glad/gl.h>
 #undef GLAD_GL_IMPLEMENTATION
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif
 
 #include "context_manager.h"
 

@@ -48,14 +48,19 @@ int main() {
   std::array<float, MAX_EDGES * 3> colors;
   std::generate(colors.begin(), colors.end(), [&]() { return distribution(mte); });
   // Initialize OpenGL context, details are wrapped in OpenGLContext class.
+#ifdef __APPLE__
+  // MacOS need explicit request legacy support
+  OpenGLContext::createContext(21, GLFW_OPENGL_ANY_PROFILE);
+#else
   OpenGLContext::createContext(41, GLFW_OPENGL_COMPAT_PROFILE);
+#endif
   GLFWwindow* window = OpenGLContext::getWindow();
   glfwSetFramebufferSizeCallback(window, OpenGLContext::framebufferResizeCallback);
   glfwSetKeyCallback(window, keyCallback);
   glfwSetWindowSize(window, 800, 800);
+#ifndef NDEBUG
   OpenGLContext::printSystemInfo();
   // Slow, but very useful for debugging.
-#ifndef NDEBUG
   OpenGLContext::enableDebugCallback();
 #endif
   // More obvious line.

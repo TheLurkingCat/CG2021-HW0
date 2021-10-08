@@ -8,6 +8,4 @@ project(GLAD
 add_library(glad INTERFACE)
 # Use c11 default
 target_compile_features(glad INTERFACE c_std_11)
-# No extensions
-set_target_properties(glad PROPERTIES C_EXTENSIONS OFF)
 target_include_directories(glad INTERFACE ${GLAD_SOURCE_DIR}/include)
